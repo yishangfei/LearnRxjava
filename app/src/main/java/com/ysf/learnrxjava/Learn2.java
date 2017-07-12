@@ -24,234 +24,185 @@ package com.ysf.learnrxjava;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
+import android.support.v4.util.TimeUtils;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 import com.orhanobut.logger.Logger;
 
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
 /**
- * Created by yishangfei on 2017/7/10 0010.
+ * Created by yishangfei on 2017/7/11 0011.
  * 个人主页：http://yishangfei.me
  * Github:https://github.com/yishangfei
  */
 public class Learn2 extends AppCompatActivity {
+
+    private Disposable disposable;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Create();
-        Map();
-        Zip();
-        Concat();
-        FlatMap();
-        ConcatMap();
+        distinct();
+        filter();
+        buffer();
+        timer();
+        interval();
+        doOnNext();
+        skip();
+        take();
     }
 
-    //Disposable，可以直接调用切断，当isDisposed()返回为false的时候，
-    //接收器能正常接收事件，但当其为true的时候，接收器停止了接收。可以通过此参数动态控制接收事件了。
-    private void Create() {
-        Observable.create(new ObservableOnSubscribe<Integer>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<Integer> e) throws Exception {
-                Logger.d("Observable 1");
-                e.onNext(1);
-                Logger.d("Observable 2");
-                e.onNext(2);
-                Logger.d("Observable 3");
-                e.onNext(3);
-            }
-        }).subscribe(new Observer<Integer>() {
-            private int i;
-            private Disposable mDisposable;
-
-            @Override
-            public void onSubscribe(@NonNull Disposable d) {
-                Logger.d("onSubscribe" + " " + d.isDisposed());
-                mDisposable = d;
-            }
-
-            @Override
-            public void onNext(@NonNull Integer integer) {
-                Logger.d("onNext" + " " + integer);
-                i++;
-                if (i == 2) {
-                    // 在RxJava 2.x 中，新增的Disposable可以做到切断的操作，让Observer观察者不再接收上游事件
-                    mDisposable.dispose();
-                    Logger.d("onNext : isDisposable : " + mDisposable.isDisposed());
-                }
-            }
-
-            @Override
-            public void onError(@NonNull Throwable e) {
-                Logger.d("onError" + " " + e.getMessage());
-            }
-
-            @Override
-            public void onComplete() {
-                Logger.d("onComplete");
-            }
-        });
-    }
-
-    //Map的作用是对发射时间发送的每一个事件应用一个函数，是的每一个事件都按照指定的函数去变化。
-    private void Map() {
-        Observable.create(new ObservableOnSubscribe<Integer>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<Integer> e) throws Exception {
-                e.onNext(1);
-                e.onNext(2);
-                e.onNext(3);
-            }
-        }).map(new Function<Integer, String>() {
-            @Override
-            public String apply(@NonNull Integer integer) throws Exception {
-                return "This is result " + integer;
-            }
-        }).subscribe(new Consumer<String>() {
-            @Override
-            public void accept(@NonNull String s) throws Exception {
-                Logger.d("accept " + s);
-            }
-        });
-    }
-
-    //zip用于合并事件，最终配对出的Observable发射事件数目只和少的那个相同。
-    private void Zip() {
-        Observable.zip(getStringObservable(), getIntegerObservable(), new BiFunction<String, Integer, String>() {
-
-            @Override
-            public String apply(@NonNull String s, @NonNull Integer integer) throws Exception {
-                return s + integer;
-            }
-        }).subscribe(new Consumer<String>() {
-            @Override
-            public void accept(@NonNull String s) throws Exception {
-                Logger.d("zip : " + s);
-            }
-        });
-    }
-
-    private Observable<String> getStringObservable() {
-        return Observable.create(new ObservableOnSubscribe<String>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<String> e) throws Exception {
-                if (!e.isDisposed()) {
-                    e.onNext("A");
-                    Logger.d("String : A");
-                    e.onNext("B");
-                    Logger.d("String : B");
-                    e.onNext("C");
-                    Logger.d("String : C");
-                }
-            }
-        });
-    }
-
-    private Observable<Integer> getIntegerObservable() {
-        return Observable.create(new ObservableOnSubscribe<Integer>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<Integer> e) throws Exception {
-                if (!e.isDisposed()) {
-                    e.onNext(1);
-                    Logger.d("Integer : 1");
-                    e.onNext(2);
-                    Logger.d("Integer : 2");
-                    e.onNext(3);
-                    Logger.d("Integer : 3");
-                    e.onNext(4);
-                    Logger.d("Integer : 4");
-                    e.onNext(5);
-                    Logger.d("Integer : 5");
-                }
-            }
-        });
-    }
-
-    //单一的把两个发射器连接成一个发射器,有条不紊的排序接收
-    private void Concat() {
-        Observable.concat(Observable.just(1, 2, 3), Observable.just(4, 5, 6))
+    //去掉重复的字符
+    private void distinct() {
+        Observable.just(1, 1, 2, 2, 3, 4, 5)
+                .distinct()
                 .subscribe(new Consumer<Integer>() {
                     @Override
                     public void accept(@NonNull Integer integer) throws Exception {
-                        Logger.d("concat :" + integer);
+                        Logger.d("Distinct :"+integer);
                     }
                 });
     }
 
-    //FlatMap可以把一个发射器Observable 通过某种方法转换为多个Observables，
-    //然后再把这些分散的Observables装进一个单一的发射器Observable。
-    //FlatMap并不能保证事件的顺序
-    private void FlatMap() {
-        Observable.create(new ObservableOnSubscribe<Integer>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<Integer> e) throws Exception {
-                e.onNext(1);
-                e.onNext(2);
-                e.onNext(3);
-            }
-        }).flatMap(new Function<Integer, ObservableSource<String>>() {
-            @Override
-            public ObservableSource<String> apply(@NonNull Integer integer) throws Exception {
-                List<String> list = new ArrayList<String>();
-                for (int i = 0; i < 3; i++) {
-                    list.add("I am value :" + integer);
-                }
-                int delayTime = (int) (1 + Math.random() * 10);
-                return Observable.fromIterable(list).delay(delayTime, TimeUnit.MILLISECONDS);
-            }
-        }).subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<String>() {
+    //过滤掉不符合条件的值
+    private void filter() {
+        Observable.just(1,20,9,-4,31)
+                .filter(new Predicate<Integer>() {
                     @Override
-                    public void accept(@NonNull String s) throws Exception {
-                        Logger.d("FlatMap :" + s);
+                    public boolean test(@NonNull Integer integer) throws Exception {
+                        return integer>=10;
                     }
-                });
+                }).subscribe(new Consumer<Integer>() {
+            @Override
+            public void accept(@NonNull Integer integer) throws Exception {
+                Logger.d("Filter :"+ integer);
+            }
+        });
     }
 
-    //和FlatMap一样的，但是ConcatMap能保证事件的顺序
-    private void ConcatMap() {
-        Observable.create(new ObservableOnSubscribe<Integer>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<Integer> e) throws Exception {
-                e.onNext(1);
-                e.onNext(2);
-                e.onNext(3);
-            }
-        }).concatMap(new Function<Integer, ObservableSource<String>>() {
-            @Override
-            public ObservableSource<String> apply(@NonNull Integer integer) throws Exception {
-                List<String> list=new ArrayList<String>();
-                for (int i = 0; i < 3; i++) {
-                    list.add("I am value :" + integer);
-                }
-                int delayTime= (int) (1+Math.random()*10);
-                return Observable.fromIterable(list).delay(delayTime,TimeUnit.MILLISECONDS);
-            }
-        }).subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<String>() {
+    // buffer的第一个参数是count，代表最大取值，然后skip是每次跳过个事件
+    private void buffer() {
+        Observable.just(1,2,3,4,5)
+                .buffer(3,3)
+                .subscribe(new Consumer<List<Integer>>() {
                     @Override
-                    public void accept(@NonNull String s) throws Exception {
-                        Logger.d("ConcatMap :"+s);
+                    public void accept(@NonNull List<Integer> integers) throws Exception {
+                        Logger.d("buffer size : " + integers.size());
+                        for (Integer i : integers){
+                            Logger.d(i);
+                        }
                     }
                 });
     }
 
+    //延时操作
+    private void timer() {
+        Logger.d(getNowStrTime());
+        Observable.timer(10, TimeUnit.SECONDS)
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())//timer默认在新线程，所以需要切换回主线程
+        .subscribe(new Consumer<Long>() {
+            @Override
+            public void accept(@NonNull Long aLong) throws Exception {
+                Logger.d("timer :" + aLong + " at " + getNowStrTime());
+            }
+        });
+    }
+
+    //interval操作符用于间隔时间执行某个操作，三个参数，分别是发送延迟，间隔时间，时间单位。
+    //这个是间隔执行，所以当Activity都销毁的时候，实际上这个操作还依然在进行,所以利用Disposable销毁
+    private void interval(){
+        Logger.d(getNowStrTime());
+        disposable= Observable.interval(3,2,TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Long>() {
+                    @Override
+                    public void accept(@NonNull Long aLong) throws Exception {
+                        Logger.d("timer :" + aLong + " at " + getNowStrTime());
+                    }
+                });
+    }
+
+    //doOnNext它的作用是让订阅者在接收到数据之前干点事情
+    private void doOnNext(){
+        Observable.just(1,2,3,4,5)
+                .doOnNext(new Consumer<Integer>() {
+                    @Override
+                    public void accept(@NonNull Integer integer) throws Exception {
+                        Logger.d("doOnNext 保存 :"+integer+"  成功");
+                    }
+                }).subscribe(new Consumer<Integer>() {
+            @Override
+            public void accept(@NonNull Integer integer) throws Exception {
+                Logger.d("doOnNext :"+integer);
+            }
+        });
+    }
+
+    //skip其实作用就是接受一个 long型参数count,代表跳过count个数目开始接收
+    private void skip(){
+        Observable.just(1,2,3,4,5)
+                .skip(2)
+                .subscribe(new Consumer<Integer>() {
+                    @Override
+                    public void accept(@NonNull Integer integer) throws Exception {
+                        Logger.d("skip :"+integer);
+                    }
+                });
+    }
+
+    //take接受一个long型参数count,代表至多接收count个数据
+    private void take(){
+        Observable.just(1,2,3,4,5)
+                .take(3)
+                .subscribe(new Consumer<Integer>() {
+                    @Override
+                    public void accept(@NonNull Integer integer) throws Exception {
+                           Logger.d("take :"+ integer);
+                    }
+                });
+    }
+
+    //一个简单的发射器依次调用onNext()方法
+    private void just(){
+        Observable.just(1,2,3,4,5)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Integer>() {
+                    @Override
+                    public void accept(@NonNull Integer integer) throws Exception {
+                          Logger.d("just :"+integer);
+                    }
+                });
+    }
+
+    public String getNowStrTime() {
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        String time=sdf.format(new Date());
+        return time;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (disposable !=null && !disposable.isDisposed()){
+            disposable.dispose();
+        }
+    }
 }

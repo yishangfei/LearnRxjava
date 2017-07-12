@@ -60,11 +60,11 @@ public class Learn1 extends AppCompatActivity {
         Zip();
         Concat();
         FlatMap();
-        ConcatMap();
+        concatMap();
     }
 
     //Disposable，可以直接调用切断，当isDisposed()返回为false的时候，
-    //接收器能正常接收事件，但当其为true的时候，接收器停止了接收。可以通过此参数动态控制接收事件了。
+    //接收器能正常接收事件，但当其为true的时候，接收器停止了接收。可以通过此参数动态控制接收事件了
     private void Create() {
         Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
@@ -109,7 +109,7 @@ public class Learn1 extends AppCompatActivity {
         });
     }
 
-    //Map的作用是对发射时间发送的每一个事件应用一个函数，是的每一个事件都按照指定的函数去变化。
+    //Map的作用是对发射时间发送的每一个事件应用一个函数，是的每一个事件都按照指定的函数去变化
     private void Map() {
         Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
@@ -131,7 +131,7 @@ public class Learn1 extends AppCompatActivity {
         });
     }
 
-    //zip用于合并事件，最终配对出的Observable发射事件数目只和少的那个相同。
+    //zip用于合并事件，最终配对出的Observable发射事件数目只和少的那个相同
     private void Zip() {
         Observable.zip(getStringObservable(), getIntegerObservable(), new BiFunction<String, Integer, String>() {
 
@@ -195,7 +195,7 @@ public class Learn1 extends AppCompatActivity {
     }
 
     //FlatMap可以把一个发射器Observable 通过某种方法转换为多个Observables，
-    //然后再把这些分散的Observables装进一个单一的发射器Observable。
+    //然后再把这些分散的Observables装进一个单一的发射器Observable
     //FlatMap并不能保证事件的顺序
     private void FlatMap() {
         Observable.create(new ObservableOnSubscribe<Integer>() {
@@ -226,7 +226,7 @@ public class Learn1 extends AppCompatActivity {
     }
 
     //和FlatMap一样的，但是ConcatMap能保证事件的顺序
-    private void ConcatMap() {
+    private void concatMap() {
         Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
             public void subscribe(@NonNull ObservableEmitter<Integer> e) throws Exception {
