@@ -53,3 +53,29 @@ Rxjava2  学习中
 #### just
 	一个简单的发射器依次调用onNext()方法
 
+## [Learn3:](https://github.com/yishangfei/LearnRxjava/blob/master/app/src/main/java/com/ysf/learnrxjava/Learn3.java "Learn3")
+
+#### Single
+	Single接收一个参数,而SingleObserver只会调用onError或者onSuccess
+	
+#### debounce
+	去除发送间隔时间小于200毫秒的发射事件
+	
+#### defer
+	每次订阅都会创建一个新的Observable,如果没有被订阅,就不会产生新的Observable
+	
+#### last
+	last操作符仅取出可观察到的最后一个值,或者是满足某些条件的最后一项
+	
+#### merge
+	merge的作用是把多个Observable结合起来,接受可变参数,也支持迭代器集合。
+	注意它和concat的区别在于,不用等到发射器A发送完所有的事件再进行发射器B的发送
+	
+#### reduce
+	reduce每次用一个方法处理一个值,可以有一个seed作为初始值
+	
+#### scan
+	scan作用和上面的reduce一致,scan会始终如一地把每一个步骤都输出
+	
+#### window
+	按照实际划分窗口，将数据发送给不同的Observable
