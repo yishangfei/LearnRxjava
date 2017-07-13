@@ -19,7 +19,8 @@ Rxjava2 操作符学习
 	单一的把两个发射器连接成一个发射器,有条不紊的排序接收
 
 #### FlatMap
-	FlatMap可以把一个发射器Observable 通过某种方法转换为多个Observables，然后再把这些分散的Observables装进一个单一的发射器Observable。    	      FlatMap并不能保证事件的顺序
+	FlatMap可以把一个发射器Observable 通过某种方法转换为多个Observables，
+	然后再把这些分散的Observables装进一个单一的发射器Observable。FlatMap并不能保证事件的顺序
 
 #### concatMap
 	和FlatMap一样的，但是ConcatMap能保证事件的顺序
