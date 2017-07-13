@@ -1,6 +1,6 @@
 # LearnRxjava
 
-Rxjava2  学习中
+Rxjava2 操作符学习
 
 ## [Learn1:](https://github.com/yishangfei/LearnRxjava/blob/master/app/src/main/java/com/ysf/learnrxjava/Learn1.java "Learn1")
 
